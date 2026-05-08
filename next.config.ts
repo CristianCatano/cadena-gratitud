@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Config de producción (Vercel). No pongas allowedDevOrigins aquí.
+  // Config limpio para PROD (Vercel)
 };
 
 export default nextConfig;
