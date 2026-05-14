@@ -1,3 +1,4 @@
+// lib/turnos_db.ts
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 const supabase = supabaseAdmin;
@@ -35,10 +36,7 @@ export async function dbGetParticipants(): Promise<Participant[]> {
     .select("id, name, phone, active, created_at")
     .order("created_at", { ascending: true });
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data ?? [];
 }
 
@@ -48,10 +46,7 @@ export async function dbGetStories(): Promise<Story[]> {
     .select("id, a_name, b_name, text, created_at")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data ?? [];
 }
 
@@ -62,10 +57,9 @@ export async function dbGetToken(token: string): Promise<TokenRecord | null> {
     .eq("token", token)
     .single();
 
+  // No encontrado
   if (error) {
-    if (error.code === "PGRST116") {
-      return null;
-    }
+    if ((error as any).code === "PGRST116") return null;
     throw new Error(error.message);
   }
 
@@ -74,6 +68,7 @@ export async function dbGetToken(token: string): Promise<TokenRecord | null> {
 
 export async function dbCreateToken(forName: string): Promise<string> {
   const token = generateToken();
+
   const { error } = await supabase.from("tokens").insert([
     {
       token,
@@ -83,10 +78,7 @@ export async function dbCreateToken(forName: string): Promise<string> {
     },
   ]);
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return token;
 }
 
@@ -94,7 +86,7 @@ export async function dbSubmitTurno(
   token: string,
   a: string,
   b: string,
-  text: string,
+  text: string
 ): Promise<string> {
   const existingToken = await dbGetToken(token);
 
@@ -107,9 +99,7 @@ export async function dbSubmitTurno(
     .update({ used: true })
     .eq("token", token);
 
-  if (updateError) {
-    throw new Error(updateError.message);
-  }
+  if (updateError) throw new Error(updateError.message);
 
   const { error: storyError } = await supabase.from("stories").insert([
     {
@@ -120,43 +110,34 @@ export async function dbSubmitTurno(
     },
   ]);
 
-  if (storyError) {
-    throw new Error(storyError.message);
-  }
+  if (storyError) throw new Error(storyError.message);
 
-  const nextToken = await dbCreateToken(b);
-  return nextToken;
+  return await dbCreateToken(b);
 }
 
 export async function dbUpsertParticipants(
   rows: Array<{ name: string; phone: string }>
-): Promise<{ inserted: number; updated: number; failed: Array<{ name: string; phone: string; reason: string }> }> {
+): Promise<{
+  inserted: number;
+  updated: number;
+  failed: Array<{ name: string; phone: string; reason: string }>;
+}> {
   const failed: Array<{ name: string; phone: string; reason: string }> = [];
   const cleanRows = rows.filter((r) => r?.name && r?.phone);
 
-  if (cleanRows.length === 0) {
-    return { inserted: 0, updated: 0, failed };
-  }
+  if (cleanRows.length === 0) return { inserted: 0, updated: 0, failed };
 
   const phones = cleanRows.map((r) => r.phone);
 
-  // 1) Buscar cuáles ya existen
-  let existingData: Array<{ phone: string }> = [];
-  try {
-    const { data, error } = await supabaseAdmin
-      .from("participants")
-      .select("phone")
-      .in("phone", phones);
+  // ✅ 1) Buscar cuáles ya existen (IMPORTANTE: filtrar por phones)
+  const { data: existingData, error: existingError } = await supabase
+    .from("participants")
+    .select("phone")
+    .in("phone", phones);
 
-    if (error) throw new Error(error.message);
-    existingData = (data ?? []) as Array<{ phone: string }>;
-  } catch (err: any) {
-    // Esto ya te muestra el error real (no "fetch failed" genérico)
-    console.error("SUPABASE existing fetch error:", err?.message || err);
-    throw err;
-  }
+  if (existingError) throw new Error(existingError.message);
 
-  const existingPhones = new Set(existingData.map((x) => x.phone));
+  const existingPhones = new Set((existingData ?? []).map((x) => x.phone));
 
   const toInsert: Array<{ name: string; phone: string; active: boolean }> = [];
   const toUpdate: Array<{ name: string; phone: string; active: boolean }> = [];
@@ -167,39 +148,37 @@ export async function dbUpsertParticipants(
     else toInsert.push(payload);
   }
 
-  // 2) Insert nuevos
+  // ✅ 2) Insert nuevos
   if (toInsert.length > 0) {
-    try {
-      const { error } = await supabaseAdmin.from("participants").insert(toInsert);
-      if (error) throw new Error(error.message);
-    } catch (err: any) {
-      console.error("SUPABASE insert error:", err?.message || err);
-      // si falla insert, marcamos todos como failed y seguimos
-      for (const r of toInsert) failed.push({ name: r.name, phone: r.phone, reason: err?.message || "insert failed" });
+    const { error } = await supabase.from("participants").insert(toInsert);
+    if (error) {
+      // marca fallos (sin tumbar todo)
+      for (const r of toInsert) {
+        failed.push({ name: r.name, phone: r.phone, reason: error.message });
+      }
     }
   }
 
-  // 3) Update existentes (uno por uno, para evitar complicaciones)
-  // Esto es más lento, pero es MUY estable para 300 personas y evita errores raros.
+  // ✅ 3) Update existentes (uno por uno = estable)
   let updatedOk = 0;
   for (const r of toUpdate) {
-    try {
-      const { error } = await supabaseAdmin
-        .from("participants")
-        .update({ name: r.name, active: true })
-        .eq("phone", r.phone);
+    const { error } = await supabase
+      .from("participants")
+      .update({ name: r.name, active: true })
+      .eq("phone", r.phone);
 
-      if (error) throw new Error(error.message);
+    if (error) {
+      failed.push({ name: r.name, phone: r.phone, reason: error.message });
+    } else {
       updatedOk += 1;
-    } catch (err: any) {
-      failed.push({ name: r.name, phone: r.phone, reason: err?.message || "update failed" });
     }
   }
 
-  const insertedOk = toInsert.length - failed.filter((f) => toInsert.some((x) => x.phone === f.phone)).length;
+  const failedPhones = new Set(failed.map((f) => f.phone));
+  const insertedOk = toInsert.filter((r) => !failedPhones.has(r.phone)).length;
 
   return {
-    inserted: Math.max(0, insertedOk),
+    inserted: insertedOk,
     updated: updatedOk,
     failed,
   };
