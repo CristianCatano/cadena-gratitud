@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Config limpio para PROD (Vercel)
+  ...(process.env.NODE_ENV === "development"
+    ? { allowedDevOrigins: ["192.168.146.64"] }
+    : {}),
 };
 
 export default nextConfig;
