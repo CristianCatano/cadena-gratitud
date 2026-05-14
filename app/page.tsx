@@ -1,9 +1,10 @@
-import { getParticipants, getStories, getLatestPendingToken } from "@/lib/turnos";
-import InitialTurnoForm from "@/app/components/InitialTurnoForm";
-import PendingTurnoCard from "@/app/components/PendingTurnoCard";
+import { noStore } from "next/cache";
+import { getStories, getLatestPendingToken } from "@/lib/turnos";
 
 export default async function Home() {
-  const participants = await getParticipants();
+  // 🔓 Desactivar cache: la Home se actualiza en cada visita
+  noStore();
+
   const stories = await getStories();
   const pendingToken = await getLatestPendingToken();
 
@@ -15,26 +16,32 @@ export default async function Home() {
           Historias cortas de cómo nos ayudamos en equipo.
         </p>
 
-        {pendingToken ? (
-          <PendingTurnoCard
-            token={pendingToken.token}
-            forName={pendingToken.for_name}
-            baseUrl={process.env.NEXT_PUBLIC_APP_URL?.trim() ?? ""}
-          />
-        ) : (
-          <InitialTurnoForm participants={participants} />
+        {/* 📌 Aviso simple si hay turno pendiente (sin link ni botones) */}
+        {pendingToken && (
+          <div className="mt-4 rounded-xl bg-yellow-50 p-4 border border-yellow-200">
+            <p className="text-sm text-yellow-800">
+              Hay un turno pendiente. Ten paciencia, pronto llegará.
+            </p>
+          </div>
         )}
 
-        <div className="space-y-3">
-          {stories.map((s, i) => (
-            <div key={i} className="rounded-xl bg-white p-4 shadow-sm">
-              <div className="text-sm text-zinc-500">
-                <span className="font-semibold text-zinc-800">{s.a_name}</span> ➜{" "}
-                <span className="font-semibold text-zinc-800">{s.b_name}</span>
+        {/* 📖 Mostrar todas las historias (público, solo lectura) */}
+        <div className="mt-6 space-y-3">
+          {stories.length === 0 ? (
+            <p className="text-zinc-500 text-center py-4">
+              Aún no hay historias. ¡Sé el primero en compartir!
+            </p>
+          ) : (
+            stories.map((s, i) => (
+              <div key={i} className="rounded-xl bg-white p-4 shadow-sm">
+                <div className="text-sm text-zinc-500">
+                  <span className="font-semibold text-zinc-800">{s.a_name}</span> ➜{" "}
+                  <span className="font-semibold text-zinc-800">{s.b_name}</span>
+                </div>
+                <div className="mt-2 text-zinc-800">{s.text}</div>
               </div>
-              <div className="mt-2 text-zinc-800">{s.text}</div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </main>

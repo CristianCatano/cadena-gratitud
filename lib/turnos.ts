@@ -182,4 +182,5 @@ export const getParticipants = dbGetParticipants;
 export const hasPendingToken = dbHasPendingToken;
 export const getLatestPendingToken = dbGetLatestPendingToken;
 export const getToken = dbGetToken;
+export const createToken = dbCreateToken;
 export const submitTurno = dbSubmitTurno;
