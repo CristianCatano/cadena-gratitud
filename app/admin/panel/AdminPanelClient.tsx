@@ -1,3 +1,4 @@
+// app/admin/panel/AdminPanelClient.tsx
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -19,7 +20,7 @@ type Participant = {
   created_at: string;
 };
 
-export default function AdminPanelClient({ baseUrl }: { baseUrl: string }) {
+export default function AdminPanelClient() {
   const searchParams = useSearchParams();
   const key = searchParams.get("key");
 
@@ -165,11 +166,14 @@ export default function AdminPanelClient({ baseUrl }: { baseUrl: string }) {
       <div className="mx-auto max-w-xl space-y-6">
         <h1 className="text-2xl font-bold text-zinc-900">Admin Panel</h1>
 
-        {/* Turno pendiente actual */}
         <section>
           <h2 className="text-lg font-semibold text-zinc-800 mb-3">Turno actual</h2>
           {pendingToken ? (
-            <PendingTurnoCard token={pendingToken.token} forName={pendingToken.for_name} baseUrl={baseUrl} />
+            <PendingTurnoCard
+              token={pendingToken.token}
+              forName={pendingToken.for_name}
+              baseUrl={process.env.NEXT_PUBLIC_APP_URL?.trim() ?? ""}
+            />
           ) : (
             <div className="rounded-xl bg-blue-50 p-4 border border-blue-200">
               <p className="text-sm text-blue-800">No hay turnos pendientes</p>
@@ -177,7 +181,6 @@ export default function AdminPanelClient({ baseUrl }: { baseUrl: string }) {
           )}
         </section>
 
-        {/* Sembrar turnos iniciales */}
         <section className="rounded-xl bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-800 mb-4">Sembrar turnos iniciales</h2>
 
@@ -188,7 +191,6 @@ export default function AdminPanelClient({ baseUrl }: { baseUrl: string }) {
           )}
 
           <div className="space-y-4">
-            {/* Cantidad */}
             <div>
               <label className="block text-sm font-medium text-zinc-700">Cantidad</label>
               <input
@@ -201,7 +203,6 @@ export default function AdminPanelClient({ baseUrl }: { baseUrl: string }) {
               />
             </div>
 
-            {/* Participantes */}
             <div>
               <label className="block text-sm font-medium text-zinc-700 mb-2">Participantes</label>
               <div className="space-y-2 max-h-40 overflow-y-auto border border-zinc-300 rounded-lg p-3 bg-zinc-50">
@@ -223,7 +224,6 @@ export default function AdminPanelClient({ baseUrl }: { baseUrl: string }) {
               </div>
             </div>
 
-            {/* Botón crear */}
             <button
               onClick={handleCreateInitialTokens}
               disabled={creatingTokens || selectedParticipants.length === 0}
@@ -233,7 +233,6 @@ export default function AdminPanelClient({ baseUrl }: { baseUrl: string }) {
             </button>
           </div>
 
-          {/* Lista de turnos creados */}
           {createdTokens.length > 0 && (
             <div className="mt-6">
               <h3 className="text-sm font-semibold text-zinc-800 mb-3">
@@ -241,7 +240,12 @@ export default function AdminPanelClient({ baseUrl }: { baseUrl: string }) {
               </h3>
               <div className="space-y-2">
                 {createdTokens.map((t, i) => (
-                  <TokenItemCard key={i} token={t.token} forName={t.for_name} baseUrl={baseUrl} />
+                  <TokenItemCard
+                    key={i}
+                    token={t.token}
+                    forName={t.for_name}
+                    baseUrl={process.env.NEXT_PUBLIC_APP_URL?.trim() ?? ""}
+                  />
                 ))}
               </div>
             </div>
@@ -252,7 +256,15 @@ export default function AdminPanelClient({ baseUrl }: { baseUrl: string }) {
   );
 }
 
-function TokenItemCard({ token, forName, baseUrl }: { token: string; forName: string; baseUrl: string }) {
+function TokenItemCard({
+  token,
+  forName,
+  baseUrl,
+}: {
+  token: string;
+  forName: string;
+  baseUrl: string;
+}) {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const resolvedBaseUrl = baseUrl || (typeof window !== "undefined" ? window.location.origin : "");
