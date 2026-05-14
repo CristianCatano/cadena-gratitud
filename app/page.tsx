@@ -1,10 +1,10 @@
-export const dynamic = "force-dynamic";
+// app/page.tsx
 import { getStories, getLatestPendingToken } from "@/lib/turnos";
 
-export default async function Home() {
-  // 🔓 Desactivar cache: la Home se actualiza en cada visita
-  noStore();
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
+export default async function Home() {
   const stories = await getStories();
   const pendingToken = await getLatestPendingToken();
 
@@ -35,7 +35,8 @@ export default async function Home() {
             stories.map((s, i) => (
               <div key={i} className="rounded-xl bg-white p-4 shadow-sm">
                 <div className="text-sm text-zinc-500">
-                  <span className="font-semibold text-zinc-800">{s.a_name}</span> ➜{" "}
+                  <span className="font-semibold text-zinc-800">{s.a_name}</span>{" "}
+                  ➜{" "}
                   <span className="font-semibold text-zinc-800">{s.b_name}</span>
                 </div>
                 <div className="mt-2 text-zinc-800">{s.text}</div>
