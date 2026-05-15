@@ -6,15 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default function Page() {
   return (
-    <Suspense
-      fallback={
-        <main className="min-h-screen bg-zinc-50 p-4">
-          <div className="mx-auto max-w-xl">
-            <p className="text-zinc-600">Cargando admin…</p>
-          </div>
-        </main>
-      }
-    >
+    <Suspense fallback={<div className="p-4 text-sm text-zinc-500">Cargando…</div>}>
       <AdminPanelClient />
     </Suspense>
   );

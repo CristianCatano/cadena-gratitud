@@ -1,8 +1,8 @@
 // app/page.tsx
-import { getStories, getLatestPendingToken } from "@/lib/turnos";
-
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+import { getStories, getLatestPendingToken } from "@/lib/turnos";
 
 export default async function Home() {
   const stories = await getStories();
@@ -16,7 +16,7 @@ export default async function Home() {
           Historias cortas de cómo nos ayudamos en equipo.
         </p>
 
-        {/* 📌 Aviso simple si hay turno pendiente (sin link ni botones) */}
+        {/* Público: solo lectura */}
         {pendingToken && (
           <div className="mt-4 rounded-xl bg-yellow-50 p-4 border border-yellow-200">
             <p className="text-sm text-yellow-800">
@@ -25,11 +25,10 @@ export default async function Home() {
           </div>
         )}
 
-        {/* 📖 Mostrar todas las historias (público, solo lectura) */}
         <div className="mt-6 space-y-3">
           {stories.length === 0 ? (
             <p className="text-zinc-500 text-center py-4">
-              Aún no hay historias. ¡Sé el primero en compartir!
+              Aún no hay historias.
             </p>
           ) : (
             stories.map((s, i) => (

@@ -1,6 +1,5 @@
+// lib/turnos_db.ts
 import { getSupabaseAdmin } from "@/lib/supabase/server";
-const supabase = () => getSupabaseAdmin();
-
 
 export type Participant = {
   id: string;
@@ -25,12 +24,16 @@ export type TokenRecord = {
   created_at: string;
 };
 
+function supabase() {
+  return getSupabaseAdmin();
+}
+
 function generateToken(): string {
   return `turno-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export async function dbGetParticipants(): Promise<Participant[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabase()
     .from("participants")
     .select("id, name, phone, active, created_at")
     .order("created_at", { ascending: true });
@@ -40,7 +43,7 @@ export async function dbGetParticipants(): Promise<Participant[]> {
 }
 
 export async function dbGetStories(): Promise<Story[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabase()
     .from("stories")
     .select("id, a_name, b_name, text, created_at")
     .order("created_at", { ascending: false });
@@ -50,15 +53,14 @@ export async function dbGetStories(): Promise<Story[]> {
 }
 
 export async function dbGetToken(token: string): Promise<TokenRecord | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabase()
     .from("tokens")
     .select("token, for_name, used, created_at")
     .eq("token", token)
     .single();
 
-  // No encontrado
   if (error) {
-    if ((error as any).code === "PGRST116") return null;
+    if ((error as any).code === "PGRST116") return null; // no rows
     throw new Error(error.message);
   }
 
@@ -68,7 +70,7 @@ export async function dbGetToken(token: string): Promise<TokenRecord | null> {
 export async function dbCreateToken(forName: string): Promise<string> {
   const token = generateToken();
 
-  const { error } = await supabase.from("tokens").insert([
+  const { error } = await supabase().from("tokens").insert([
     {
       token,
       for_name: forName,
@@ -93,14 +95,14 @@ export async function dbSubmitTurno(
     throw new Error("Token inválido o ya usado.");
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await supabase()
     .from("tokens")
     .update({ used: true })
     .eq("token", token);
 
   if (updateError) throw new Error(updateError.message);
 
-  const { error: storyError } = await supabase.from("stories").insert([
+  const { error: storyError } = await supabase().from("stories").insert([
     {
       a_name: a,
       b_name: b,
@@ -128,15 +130,14 @@ export async function dbUpsertParticipants(
 
   const phones = cleanRows.map((r) => r.phone);
 
-  // ✅ 1) Buscar cuáles ya existen (IMPORTANTE: filtrar por phones)
-  const { data: existingData, error: existingError } = await supabase
+  const { data: existingData, error: existingError } = await supabase()
     .from("participants")
     .select("phone")
     .in("phone", phones);
 
   if (existingError) throw new Error(existingError.message);
 
-  const existingPhones = new Set((existingData ?? []).map((x) => x.phone));
+  const existingPhones = new Set((existingData ?? []).map((x: any) => x.phone));
 
   const toInsert: Array<{ name: string; phone: string; active: boolean }> = [];
   const toUpdate: Array<{ name: string; phone: string; active: boolean }> = [];
@@ -147,21 +148,18 @@ export async function dbUpsertParticipants(
     else toInsert.push(payload);
   }
 
-  // ✅ 2) Insert nuevos
   if (toInsert.length > 0) {
-    const { error } = await supabase.from("participants").insert(toInsert);
+    const { error } = await supabase().from("participants").insert(toInsert);
     if (error) {
-      // marca fallos (sin tumbar todo)
       for (const r of toInsert) {
         failed.push({ name: r.name, phone: r.phone, reason: error.message });
       }
     }
   }
 
-  // ✅ 3) Update existentes (uno por uno = estable)
   let updatedOk = 0;
   for (const r of toUpdate) {
-    const { error } = await supabase
+    const { error } = await supabase()
       .from("participants")
       .update({ name: r.name, active: true })
       .eq("phone", r.phone);
@@ -176,9 +174,5 @@ export async function dbUpsertParticipants(
   const failedPhones = new Set(failed.map((f) => f.phone));
   const insertedOk = toInsert.filter((r) => !failedPhones.has(r.phone)).length;
 
-  return {
-    inserted: insertedOk,
-    updated: updatedOk,
-    failed,
-  };
+  return { inserted: insertedOk, updated: updatedOk, failed };
 }
