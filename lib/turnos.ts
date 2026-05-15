@@ -1,7 +1,15 @@
 // lib/turnos.ts
-import { dbGetStories, dbGetParticipants, dbGetToken, dbSubmitTurno } from "@/lib/turnos_db";
+import {
+  dbGetStories,
+  dbGetParticipants,
+  dbGetToken,
+  dbSubmitTurno,
+  dbCreateToken as _dbCreateToken,
+} from "@/lib/turnos_db";
+
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
+// ====== API “bonita” (la que usan las pages/components) ======
 export async function getStories() {
   return dbGetStories();
 }
@@ -19,10 +27,15 @@ export async function submitTurno(token: string, a: string, b: string, text: str
   return dbSubmitTurno(token, a, b, text);
 }
 
-/**
- * Devuelve el último token pendiente (used=false), o null si no hay.
- * Esto se usa en Home para mostrar el aviso "Hay un turno pendiente..."
- */
+// ====== COMPATIBILIDAD (para rutas antiguas que importan desde "@/lib/turnos") ======
+// Algunas rutas tuyas hacen: import { dbCreateToken } from "@/lib/turnos";
+// Otras hacen: import { createToken } from "@/lib/turnos";
+export async function dbCreateToken(forName: string) {
+  return _dbCreateToken(forName);
+}
+export const createToken = dbCreateToken;
+
+// ====== TURNOS PENDIENTES (para Home / muro público) ======
 export async function getLatestPendingToken(): Promise<{
   token: string;
   for_name: string;
