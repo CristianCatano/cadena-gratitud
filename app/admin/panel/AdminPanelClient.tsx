@@ -1,8 +1,8 @@
-// app/admin/panel/AdminPanelClient.tsx
-"use client";
+﻿"use client";
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import PendingTurnoCard from "@/app/components/PendingTurnoCard";
 
 type TokenRecord = {
@@ -29,7 +29,6 @@ export default function AdminPanelClient() {
   const [pendingToken, setPendingToken] = useState<TokenRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Sembrar turnos
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [quantity, setQuantity] = useState(5);
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
@@ -162,95 +161,132 @@ export default function AdminPanelClient() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 p-4">
-      <div className="mx-auto max-w-xl space-y-6">
-        <h1 className="text-2xl font-bold text-zinc-900">Admin Panel</h1>
-
-        <section>
-          <h2 className="text-lg font-semibold text-zinc-800 mb-3">Turno actual</h2>
-          {pendingToken ? (
-            <PendingTurnoCard
-              token={pendingToken.token}
-              forName={pendingToken.for_name}
-              baseUrl={process.env.NEXT_PUBLIC_APP_URL?.trim() ?? ""}
-            />
-          ) : (
-            <div className="rounded-xl bg-blue-50 p-4 border border-blue-200">
-              <p className="text-sm text-blue-800">No hay turnos pendientes</p>
-            </div>
-          )}
-        </section>
-
-        <section className="rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-800 mb-4">Sembrar turnos iniciales</h2>
-
-          {error && (
-            <div className="mb-4 rounded-lg bg-red-50 p-3 border border-red-200">
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-          )}
-
-          <div className="space-y-4">
+    <main className="min-h-screen bg-gradient-to-b from-zinc-50 via-zinc-100 to-white py-8">
+      <div className="mx-auto max-w-5xl px-4 space-y-6">
+        <div className="overflow-hidden rounded-[2rem] bg-white p-6 shadow-[0_28px_70px_-32px_rgba(15,23,42,0.18)] ring-1 ring-zinc-200">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <label className="block text-sm font-medium text-zinc-700">Cantidad</label>
-              <input
-                type="number"
-                min="1"
-                max="100"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                className="mt-1 w-full px-3 py-2 border border-zinc-300 rounded-lg text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <p className="text-sm uppercase tracking-[0.24em] text-amber-700">Panel admin</p>
+              <h1 className="mt-3 text-3xl font-semibold text-zinc-900">Turnos y estado</h1>
+              <p className="mt-2 text-zinc-600">Administra la generación de turnos y avisa al próximo colaborador con un enlace seguro.</p>
+            </div>
+            <div className="flex items-center gap-4 rounded-3xl bg-zinc-50 px-4 py-3">
+              <Image
+                src="/branding/LOGO_ID_POSITIVO.png"
+                width={120}
+                height={34}
+                alt="Interdoors"
+                className="h-10 w-auto"
+              />
+              <Image
+                src="/branding/Fondo-Buen-Trato.png"
+                width={72}
+                height={72}
+                alt="Actividad Cadena de gratitud"
+                className="h-16 w-16 rounded-3xl bg-white p-2"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-2">Participantes</label>
-              <div className="space-y-2 max-h-40 overflow-y-auto border border-zinc-300 rounded-lg p-3 bg-zinc-50">
-                {participants.length === 0 ? (
-                  <p className="text-sm text-zinc-500">No hay participantes disponibles</p>
-                ) : (
-                  participants.map((p) => (
-                    <label key={p.id} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedParticipants.includes(p.name)}
-                        onChange={() => handleToggleParticipant(p.name)}
-                        className="w-4 h-4 rounded border-zinc-300 text-blue-600"
-                      />
-                      <span className="text-sm text-zinc-800">{p.name}</span>
-                    </label>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <button
-              onClick={handleCreateInitialTokens}
-              disabled={creatingTokens || selectedParticipants.length === 0}
-              className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-zinc-400 disabled:cursor-not-allowed transition"
-            >
-              {creatingTokens ? "Creando..." : `Crear ${quantity} turno${quantity !== 1 ? "s" : ""}`}
-            </button>
           </div>
+        </div>
 
-          {createdTokens.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-sm font-semibold text-zinc-800 mb-3">
-                Turnos creados ({createdTokens.length})
-              </h3>
-              <div className="space-y-2">
-                {createdTokens.map((t, i) => (
-                  <TokenItemCard
-                    key={i}
-                    token={t.token}
-                    forName={t.for_name}
-                    baseUrl={process.env.NEXT_PUBLIC_APP_URL?.trim() ?? ""}
-                  />
-                ))}
-              </div>
+        <div className="grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
+          <section className="space-y-6">
+            <div className="rounded-[1.75rem] bg-white p-6 shadow-[0_18px_48px_-28px_rgba(15,23,42,0.18)] ring-1 ring-zinc-200">
+              <h2 className="text-xl font-semibold text-zinc-900 mb-3">Turno actual</h2>
+              {pendingToken ? (
+                <PendingTurnoCard
+                  token={pendingToken.token}
+                  forName={pendingToken.for_name}
+                  baseUrl={process.env.NEXT_PUBLIC_APP_URL?.trim() ?? ""}
+                />
+              ) : (
+                <div className="rounded-[1.5rem] bg-amber-50 p-5 text-sm text-amber-800 ring-1 ring-amber-200">
+                  No hay turnos pendientes
+                </div>
+              )}
             </div>
-          )}
-        </section>
+
+            <div className="rounded-[1.75rem] bg-white p-6 shadow-[0_18px_48px_-28px_rgba(15,23,42,0.18)] ring-1 ring-zinc-200">
+              <h2 className="text-xl font-semibold text-zinc-900 mb-4">Sembrar turnos iniciales</h2>
+
+              {error && (
+                <div className="mb-4 rounded-3xl bg-red-50 p-4 text-sm text-red-700 ring-1 ring-red-200">
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700">Cantidad</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="mt-2 w-full rounded-3xl border border-zinc-300 bg-zinc-50 px-4 py-3 text-zinc-900 outline-none transition focus:border-amber-300 focus:ring-2 focus:ring-amber-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">Participantes</label>
+                  <div className="space-y-3 max-h-44 overflow-y-auto rounded-3xl border border-zinc-300 bg-zinc-50 p-4">
+                    {participants.length === 0 ? (
+                      <p className="text-sm text-zinc-500">No hay participantes disponibles</p>
+                    ) : (
+                      participants.map((p) => (
+                        <label key={p.id} className="flex items-center gap-3 cursor-pointer rounded-2xl px-3 py-2 transition hover:bg-white/80">
+                          <input
+                            type="checkbox"
+                            checked={selectedParticipants.includes(p.name)}
+                            onChange={() => handleToggleParticipant(p.name)}
+                            className="h-4 w-4 rounded border-zinc-300 text-amber-600"
+                          />
+                          <span className="text-sm text-zinc-800">{p.name}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleCreateInitialTokens}
+                  disabled={creatingTokens || selectedParticipants.length === 0}
+                  className="w-full rounded-3xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:bg-zinc-400 disabled:cursor-not-allowed"
+                >
+                  {creatingTokens ? "Creando..." : `Crear ${quantity} turno${quantity !== 1 ? "s" : ""}`}
+                </button>
+              </div>
+
+              {createdTokens.length > 0 && (
+                <div className="mt-6 space-y-4">
+                  <h3 className="text-sm font-semibold text-zinc-800">Turnos creados ({createdTokens.length})</h3>
+                  <div className="space-y-3">
+                    {createdTokens.map((t, i) => (
+                      <TokenItemCard
+                        key={i}
+                        token={t.token}
+                        forName={t.for_name}
+                        baseUrl={process.env.NEXT_PUBLIC_APP_URL?.trim() ?? ""}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <aside className="space-y-6">
+            <div className="rounded-[1.75rem] bg-amber-50 p-6 shadow-[0_18px_48px_-28px_rgba(15,23,42,0.18)] ring-1 ring-amber-200">
+              <h2 className="text-xl font-semibold text-amber-900">Acceso seguro</h2>
+              <p className="mt-3 text-sm text-zinc-700">Mantén &ldquo;?key=empanada&rdquo; para ingresar al panel administrativo y conservar el flujo actual del sistema.</p>
+            </div>
+            <div className="rounded-[1.75rem] bg-white p-6 shadow-[0_18px_48px_-28px_rgba(15,23,42,0.18)] ring-1 ring-zinc-200">
+              <p className="text-sm uppercase tracking-[0.24em] text-zinc-500">Panel a la vista</p>
+              <p className="mt-4 text-zinc-700">Este espacio mantiene la funcionalidad actual de ver el turno pendiente, abrirlo, copiar el enlace y enviar por WhatsApp sin cambios.</p>
+            </div>
+          </aside>
+        </div>
       </div>
     </main>
   );
@@ -288,24 +324,28 @@ function TokenItemCard({
   };
 
   return (
-    <div className="rounded-lg bg-zinc-50 p-3 border border-zinc-200 text-sm">
-      <div className="font-medium text-zinc-800 mb-1">Para: {forName}</div>
-      <div className="text-xs text-zinc-500 mb-2 break-all">{token}</div>
-      <div className="flex gap-2">
-        <button
-          onClick={copyLink}
-          className="px-3 py-1 bg-zinc-300 text-zinc-800 rounded hover:bg-zinc-400 text-xs font-medium transition"
-        >
-          Copiar
-        </button>
-        <button
-          onClick={sendWhatsapp}
-          className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs font-medium transition"
-        >
-          WhatsApp
-        </button>
-        {statusMessage && <span className="text-xs text-blue-600 self-center">{statusMessage}</span>}
+    <div className="rounded-[1.5rem] bg-zinc-50 p-4 border border-zinc-200 text-sm shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="font-semibold text-zinc-800">Para: {forName}</p>
+          <p className="mt-1 text-xs text-zinc-500 break-all">{token}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={copyLink}
+            className="rounded-full bg-zinc-200 px-3 py-2 text-xs font-semibold text-zinc-800 transition hover:bg-zinc-300"
+          >
+            Copiar
+          </button>
+          <button
+            onClick={sendWhatsapp}
+            className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500"
+          >
+            WhatsApp
+          </button>
+        </div>
       </div>
+      {statusMessage && <p className="mt-3 text-xs text-blue-600">{statusMessage}</p>}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 
@@ -34,35 +34,40 @@ export default function PendingTurnoCard({ token, forName, baseUrl }: Props) {
   };
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-sm">
-      <h2 className="text-xl font-semibold text-zinc-900">Turno pendiente</h2>
-      <p className="mt-2 text-sm text-zinc-700">
-        Turno pendiente para: <span className="font-semibold text-zinc-900">{forName}</span>
-      </p>
-
-      <div className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-800 break-words">
-        <span className="font-medium text-zinc-700">Link:</span>
-        <div className="mt-1 text-emerald-700">{tokenUrl}</div>
+    <section className="rounded-[1.75rem] border border-zinc-200 bg-white p-6 shadow-[0_16px_40px_-24px_rgba(15,23,42,0.18)]">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-[0.22em] text-amber-700">Turno activo</p>
+          <h2 className="mt-2 text-2xl font-semibold text-zinc-900">Agradecimiento para {forName}</h2>
+        </div>
+        <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-800">
+          En espera
+        </span>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="mt-4 rounded-[1.5rem] border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-800 break-words">
+        <span className="font-medium text-zinc-700">Link:</span>
+        <div className="mt-2 text-emerald-700">{tokenUrl}</div>
+      </div>
+
+      <div className="mt-6 flex flex-wrap gap-3">
         <a
           href={`/turno/${token}`}
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700"
+          className="rounded-full bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-700"
         >
           Abrir turno
         </a>
         <button
           type="button"
           onClick={copyLink}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+          className="rounded-full bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500"
         >
           Copiar link
         </button>
         <button
           type="button"
           onClick={sendWhatsapp}
-          className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-500"
+          className="rounded-full bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-500"
         >
           Enviar por WhatsApp
         </button>
