@@ -1,29 +1,22 @@
 // lib/supabase/server.ts
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-function required(name: string, value: string | undefined) {
-  const v = (value ?? "").trim();
-  if (!v) throw new Error(`Missing ${name} in environment variables`);
-  return v;
-}
+let _admin: SupabaseClient | null = null;
 
-/**
- * Admin client (Service Role) — SOLO servidor
- */
-export function getSupabaseAdmin() {
-  const supabaseUrl = required("SUPABASE_URL", process.env.SUPABASE_URL);
-  const serviceRoleKey = required(
-    "SUPABASE_SERVICE_ROLE_KEY",
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+export function getSupabaseAdmin(): SupabaseClient {
+  if (_admin) return _admin;
 
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
+  const supabaseUrl = (process.env.SUPABASE_URL ?? "").trim();
+  const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").trim();
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    // ✅ No revienta el build por import; solo cuando realmente se use el cliente
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in Vercel Env Vars");
+  }
+
+  _admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
   });
-}
 
-/**
- * ✅ Export de compatibilidad: muchos archivos importan `supabaseAdmin`
- * y Vercel estaba fallando porque no existía.
- */
-export const supabaseAdmin = getSupabaseAdmin();
+  return _admin;
+}

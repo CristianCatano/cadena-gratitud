@@ -1,7 +1,6 @@
-// lib/turnos_db.ts
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
+const supabase = () => getSupabaseAdmin();
 
-const supabase = supabaseAdmin;
 
 export type Participant = {
   id: string;
